@@ -2,6 +2,7 @@ from re import S
 import pulp as p
 import numpy as np
 import pandas as pd
+from pulp.apis.coin_api import PULP_CBC_CMD
 
 
 def generate_team(budget, owner_theshold, form_theshold, sub_multiplier, excluded_clubs):
@@ -14,12 +15,10 @@ def generate_team(budget, owner_theshold, form_theshold, sub_multiplier, exclude
             df.loc[x, "chance_of_playing_this_round"] = 100
     
     for x in df.index:
-        if df.loc[x, "team"] in excluded_clubs:
+        if df.loc[x, "team_code"] in excluded_clubs:
             df.drop(x, inplace=True)
 
     df.reset_index(drop=True, inplace=True)
-
-    print(df)
 
     expected_scores = df["total_points"]
     prices = df["now_cost"] / 10
@@ -30,13 +29,12 @@ def generate_team(budget, owner_theshold, form_theshold, sub_multiplier, exclude
     form = df["form"]
     chance_of_playing = df["chance_of_playing_this_round"]
 
-    
-
     num_players = len(expected_scores)
     total_budget = budget
     sub_factor = sub_multiplier
 
-    print(chance_of_playing)
+    print("Included clubs: ")
+    print(np.unique(clubs))
 
     model = p.LpProblem("Maximize Points", p.LpMaximize)
 
@@ -106,7 +104,7 @@ def generate_team(budget, owner_theshold, form_theshold, sub_multiplier, exclude
         model += (decisions[i] - captain_decisions[i]) >= 0  # captain must also be on team
         model += (decisions[i] + sub_decisions[i]) <= 1  # subs must not be on team
 
-    model.solve()
+    model.solve(PULP_CBC_CMD(msg=0))
 
     print("Starting:")
     price = 0
@@ -148,30 +146,11 @@ def generate_team(budget, owner_theshold, form_theshold, sub_multiplier, exclude
 
 
 if __name__ == "__main__":
-    generate_team(100.6, 100, 3, 0.1, [])
+    #[ 1  2  3  4  6  7  8 11 13 14 20 21 31 36 39 43 45 57 90 94]
+    #[ 2        4  6  7  8 11 13    20 21 31 36    43 45 57 90 94]
+    excluded_teams = [94, 36, 31, 11, 13, 1, 45, 20, 57, 21]
+    generate_team(100.6, 100, 3, 0.1, excluded_teams)
 
-
-# GW15
-# Starting:
-# **Smith Rowe** Points = 69, Price = 61, Owned % = 28.3
-# **Rüdiger** Points = 72, Price = 61, Owned % = 22.0
-# **James** Points = 76, Price = 62, Owned % = 35.2
-# **Mendy** Points = 66, Price = 63, Owned % = 19.8
-# **Gallagher** Points = 72, Price = 61, Owned % = 24.6
-# **van Dijk** Points = 78, Price = 66, Owned % = 18.0
-# **Salah** Points = 152, Price = 131, Owned % = 73.1
-# **Alexander-Arnold** Points = 99, Price = 81, Owned % = 40.2
-# **Cancelo** Points = 84, Price = 68, Owned % = 39.2
-# **Bernardo** Points = 84, Price = 76, Owned % = 24.0
-# **Dennis** Points = 75, Price = 57, Owned % = 25.7
-# Total Price: 78.7
-# Substitutes:
-# **Gray** Points = 65, Price = 55, Owned % = 9.8
-# **Broja** Points = 33, Price = 50, Owned % = 2.4
-# **King** Points = 54, Price = 58, Owned % = 6.5
-# **Sá** Points = 67, Price = 50, Owned % = 3.3
-# Total Price: 100.0
-# Total Points: 1146
 
 # GW16
 # GK
@@ -222,3 +201,32 @@ if __name__ == "__main__":
 # **Sá** Points = 71, Price = 51, Owned % = 3.6
 # Total Price: 99.7
 # Total Points: 1180
+
+
+#GW19 Possible
+# GK
+# **Sá** Points = 77, Price = 51, Owned % = 3.9, Form = 6.2, Play Chance = None
+# DEF
+# **Gabriel** Points = 73, Price = 52, Owned % = 5.1, Form = 4.5, Play Chance = 100
+# **Rüdiger** Points = 83, Price = 62, Owned % = 24.3, Form = 5.0, Play Chance = 100
+# **James** Points = 84, Price = 63, Owned % = 35.7, Form = 3.5, Play Chance = 100
+# **Alexander-Arnold** Points = 119, Price = 82, Owned % = 43.0, Form = 9.2, Play Chance = 100
+# MID
+# **Mount** Points = 84, Price = 76, Owned % = 21.0, Form = 7.0, Play Chance = 100
+# **Raphinha** Points = 75, Price = 66, Owned % = 17.7, Form = 4.2, Play Chance = 100
+# **Salah** Points = 168, Price = 131, Owned % = 73.6, Form = 8.5, Play Chance = None
+# **Jota** Points = 87, Price = 80, Owned % = 27.8, Form = 6.8, Play Chance = 100
+# **Bernardo** Points = 91, Price = 77, Owned % = 30.2, Form = 7.0, Play Chance = 75
+# ATT
+# **Saint-Maximin** Points = 64, Price = 67, Owned % = 14.0, Form = 3.2, Play Chance = 100
+# Total Price: 80.7
+# Total Points: 1005
+# Substitutes:
+# **Ramsdale** Points = 75, Price = 51, Owned % = 17.3
+# **Gelhardt** Points = 14, Price = 46, Owned % = 2.0
+# **Coady** Points = 64, Price = 45, Owned % = 6.9
+# **Hwang** Points = 47, Price = 56, Owned % = 7.3
+# Total Price: 100.5
+# Total Points: 1205
+# Captain:
+# **CAPTAIN: Salah** Points = 168, Price = 131
