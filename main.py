@@ -10,19 +10,23 @@ pd.set_option('display.max_seq_items', None)
 pd.set_option('display.max_colwidth', 500)
 pd.set_option('expand_frame_repr', True)
 
-def generate_team(budget, owner_theshold, form_theshold, fixture_threshold, sub_multiplier, excluded_clubs, game_week):
+def generate_team(budget, owner_theshold, form_theshold, fixture_threshold, sub_multiplier, excluded_clubs, game_week, number_of_gw_lookahead):
+
+    look_ahead_gw = game_week + number_of_gw_lookahead
 
     df = pd.read_csv("https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/2021-22/players_raw.csv")
     df_fixtures = pd.read_csv("https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/2021-22/fixtures.csv")
 
+    df_fixtures = df_fixtures[df_fixtures['event'].notna()]
+    
+
     for x in df_fixtures.index:
-        if df_fixtures.loc[x, "event"] != game_week:
+        if df_fixtures.loc[x, "event"] < game_week or df_fixtures.loc[x, "event"] > look_ahead_gw:
             df_fixtures.drop(x, inplace=True)
 
     df_fixtures.reset_index(drop=True, inplace=True)
 
-    # df_fixtures.rename(columns={"team_h": "team"}, inplace=True)
-    # # df_fixtures.rename(columns={"team_a": "team"}, inplace=True)
+    print(df_fixtures)
 
     for x in df.index:
         if df.loc[x, "chance_of_playing_this_round"] == "None":
@@ -53,7 +57,7 @@ def generate_team(budget, owner_theshold, form_theshold, fixture_threshold, sub_
     df["fixture_difficulty"] = fixture_difficulty
 
     # print(df[["team", "team_h_y", "team_a_y", "team_h_difficulty_y", "team_a_difficulty_y", "fixture_difficulty"]])
-    # df.to_csv("debug.csv")
+    df.to_csv("debug.csv")
 
     expected_scores = df["total_points"]
     prices = df["now_cost"] / 10
@@ -190,86 +194,12 @@ if __name__ == "__main__":
     #[ 1  2  3  4  6  7  8 11 13 14 20 21 31 36 39 43 45 57 90 94]
     #[ 2        4  6  7  8 11 13    20 21 31 36    43 45 57 90 94]
     # excluded_teams = [94, 36, 31, 11, 13, 1, 45, 20, 57, 21, 7, 90]
+    budget = 100.6
+    owner_theshold = 100
+    form_threshold = 3
+    fixture_threshold = 2
+    sub_multiplier = 0.1
     excluded_teams = []
     game_week = 19.0
-    generate_team(100.6, 100, 3, 2, 0.1, excluded_teams, game_week)
-
-
-# GW16
-# GK
-# **Sá** Points = 71, Price = 51, Owned % = 3.6, Form = 6.2, Play Chance = None
-# DEF
-# **Rüdiger** Points = 81, Price = 61, Owned % = 23.0, Form = 5.6, Play Chance = 100
-# **van Dijk** Points = 83, Price = 67, Owned % = 18.8, Form = 6.8, Play Chance = None
-# **Alexander-Arnold** Points = 108, Price = 81, Owned % = 41.4, Form = 8.8, Play Chance = 100
-# **Cancelo** Points = 91, Price = 68, Owned % = 36.8, Form = 4.8, Play Chance = 0
-# MID
-# **Mount** Points = 77, Price = 76, Owned % = 19.0, Form = 7.0, Play Chance = 100
-# **Gallagher** Points = 87, Price = 61, Owned % = 25.4, Form = 5.0, Play Chance = 100
-# **Salah** Points = 160, Price = 131, Owned % = 73.3, Form = 8.6, Play Chance = None
-# **Bernardo** Points = 90, Price = 77, Owned % = 30.3, Form = 8.2, Play Chance = None
-# **Bowen** Points = 74, Price = 65, Owned % = 7.3, Form = 3.8, Play Chance = None
-# ATT
-# **Dennis** Points = 84, Price = 58, Owned % = 33.1, Form = 8.8, Play Chance = 100
-# Total Price: 79.6
-# Substitutes:
-# **Ramsdale** Points = 70, Price = 50, Owned % = 16.0
-# **Broja** Points = 35, Price = 51, Owned % = 2.6
-# **King** Points = 56, Price = 58, Owned % = 7.8
-# **Coady** Points = 56, Price = 45, Owned % = 6.4
-# Total Price: 100.0
-# Total Points: 1223
-
-# GW16 (Below 50% Ownership)
-# GK
-# **Alisson** Points = 72, Price = 60, Owned % = 8.0, Form = 5.8, Play Chance = 100
-# DEF
-# **Rüdiger** Points = 81, Price = 61, Owned % = 23.0, Form = 5.6, Play Chance = 100
-# **van Dijk** Points = 83, Price = 67, Owned % = 18.8, Form = 6.8, Play Chance = None
-# **Alexander-Arnold** Points = 108, Price = 81, Owned % = 41.4, Form = 8.8, Play Chance = 100
-# **Cancelo** Points = 91, Price = 68, Owned % = 36.8, Form = 4.8, Play Chance = 0
-# MID
-# **Mount** Points = 77, Price = 76, Owned % = 19.0, Form = 7.0, Play Chance = 100
-# **Gallagher** Points = 87, Price = 61, Owned % = 25.4, Form = 5.0, Play Chance = 100
-# **Bernardo** Points = 90, Price = 77, Owned % = 30.3, Form = 8.2, Play Chance = None
-# **Son** Points = 81, Price = 103, Owned % = 16.6, Form = 7.7, Play Chance = 100
-# **Bowen** Points = 74, Price = 65, Owned % = 7.3, Form = 3.8, Play Chance = None
-# ATT
-# **Dennis** Points = 84, Price = 58, Owned % = 33.1, Form = 8.8, Play Chance = 100
-# Total Price: 77.7
-# Substitutes:
-# **Gabriel** Points = 67, Price = 52, Owned % = 4.1
-# **Pukki** Points = 58, Price = 59, Owned % = 6.1
-# **King** Points = 56, Price = 58, Owned % = 7.8
-# **Sá** Points = 71, Price = 51, Owned % = 3.6
-# Total Price: 99.7
-# Total Points: 1180
-
-
-#GW19 Possible
-# GK
-# **Sá** Points = 77, Price = 51, Owned % = 3.9, Form = 6.2, Play Chance = None
-# DEF
-# **Gabriel** Points = 73, Price = 52, Owned % = 5.1, Form = 4.5, Play Chance = 100
-# **Rüdiger** Points = 83, Price = 62, Owned % = 24.3, Form = 5.0, Play Chance = 100
-# **James** Points = 84, Price = 63, Owned % = 35.7, Form = 3.5, Play Chance = 100
-# **Alexander-Arnold** Points = 119, Price = 82, Owned % = 43.0, Form = 9.2, Play Chance = 100
-# MID
-# **Mount** Points = 84, Price = 76, Owned % = 21.0, Form = 7.0, Play Chance = 100
-# **Raphinha** Points = 75, Price = 66, Owned % = 17.7, Form = 4.2, Play Chance = 100
-# **Salah** Points = 168, Price = 131, Owned % = 73.6, Form = 8.5, Play Chance = None
-# **Jota** Points = 87, Price = 80, Owned % = 27.8, Form = 6.8, Play Chance = 100
-# **Bernardo** Points = 91, Price = 77, Owned % = 30.2, Form = 7.0, Play Chance = 75
-# ATT
-# **Saint-Maximin** Points = 64, Price = 67, Owned % = 14.0, Form = 3.2, Play Chance = 100
-# Total Price: 80.7
-# Total Points: 1005
-# Substitutes:
-# **Ramsdale** Points = 75, Price = 51, Owned % = 17.3
-# **Gelhardt** Points = 14, Price = 46, Owned % = 2.0
-# **Coady** Points = 64, Price = 45, Owned % = 6.9
-# **Hwang** Points = 47, Price = 56, Owned % = 7.3
-# Total Price: 100.5
-# Total Points: 1205
-# Captain:
-# **CAPTAIN: Salah** Points = 168, Price = 131
+    number_of_gw_lookahead = 2
+    generate_team(budget, owner_theshold, form_threshold, fixture_threshold, sub_multiplier, excluded_teams, game_week, number_of_gw_lookahead)
